@@ -1,22 +1,26 @@
 import { db } from "../firebase/admin.js";
 
 export default async function handler(req, res) {
-
-  // Allow requests from ANY origin (for testing)
+  // Allow all origins (for testing)
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight requests
   if (req.method === "OPTIONS") {
+    // preflight request
     return res.status(200).end();
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "POST only" });
-  }
-
+  // Your existing Paystack logic here
   try {
+    const { userId, spAmount } = req.body;
+    
+    // Simulate success (replace with real Paystack call)
+    res.status(200).json({ status: "success", spAdded: spAmount });
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
+}  try {
     const { userId, spAmount } = req.body;
 
     if (!userId || !spAmount) {
