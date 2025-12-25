@@ -1,4 +1,3 @@
-// api/paystack.js
 import { db } from "../firebase/admin.js";
 
 export default async function handler(req, res) {
@@ -7,7 +6,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight OPTIONS request
+  // ===== Handle preflight OPTIONS =====
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -16,23 +15,17 @@ export default async function handler(req, res) {
     try {
       const { userId, spAmount } = req.body;
 
-      if (!userId || !spAmount) {
-        return res.status(400).json({ error: "Missing userId or spAmount" });
-      }
-
-      // ===== Firebase logic =====
+      // ===== Firebase SP logic =====
       const userRef = db.ref(`users/${userId}/points`);
       const snapshot = await userRef.get();
       const currentSP = snapshot.exists() ? snapshot.val() : 0;
-
       const newSP = currentSP + Number(spAmount);
       await userRef.set(newSP);
 
-      // ===== Response =====
       return res.status(200).json({
         success: true,
         userId,
-        newSP,
+        newSP
       });
 
     } catch (err) {
