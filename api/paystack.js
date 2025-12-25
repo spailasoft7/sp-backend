@@ -9,10 +9,10 @@ export default async function handler(req, res) {
     const { userId, spAmount } = req.body;
 
     if (!userId || !spAmount) {
-      return res.status(400).json({ error: "Missing data" });
+      return res.status(400).json({ error: "Missing userId or spAmount" });
     }
 
-    const userRef = db.ref(`users/${userId}/SP`);
+    const userRef = db.ref(`users/${userId}/points`);
 
     const snapshot = await userRef.get();
     const currentSP = snapshot.exists() ? snapshot.val() : 0;
@@ -23,9 +23,11 @@ export default async function handler(req, res) {
 
     return res.json({
       success: true,
+      userId,
       newSP,
     });
   } catch (err) {
+    console.error(err);
     return res.status(500).json({ error: err.message });
   }
 }
