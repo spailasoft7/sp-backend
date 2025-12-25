@@ -1,32 +1,30 @@
 import { db } from "../firebase/admin.js";
 
 export default async function handler(req, res) {
-  // Allow all origins (for testing)
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // ===== CORS headers =====
+  res.setHeader("Access-Control-Allow-Origin", "*"); // allow all origins
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  // Handle preflight OPTIONS request
   if (req.method === "OPTIONS") {
-    // preflight request
     return res.status(200).end();
   }
 
-  // Your existing Paystack logic here
-  try {
-    const { userId, spAmount } = req.body;
-    
-    // Simulate success (replace with real Paystack call)
-    res.status(200).json({ status: "success", spAdded: spAmount });
-  } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
-  }
-}  try {
-    const { userId, spAmount } = req.body;
+  // ===== Your Paystack logic =====
+  if (req.method === "POST") {
+    try {
+      const { userId, spAmount } = req.body;
+      // Call Paystack or your logic here
 
-    if (!userId || !spAmount) {
-      return res.status(400).json({ error: "Missing userId or spAmount" });
+      res.status(200).json({ status: "success", spAdded: spAmount });
+    } catch (err) {
+      res.status(500).json({ status: "error", message: err.message });
     }
-
+  } else {
+    res.status(405).json({ status: "error", message: "Method not allowed" });
+  }
+}
     const userRef = db.ref(`users/${userId}/points`);
 
     const snapshot = await userRef.get();
