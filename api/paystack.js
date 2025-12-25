@@ -14,33 +14,28 @@ const db = getDatabase();
 
 export default async function handler(req, res) {
   // ===== CORS headers =====
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "*"); // allow all origins
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") return res.status(200).end(); // preflight
+  // Handle preflight OPTIONS request
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "Method not allowed" });
-
+  // ===== Your existing Paystack / Firebase logic =====
   try {
     const { userId, spAmount } = req.body;
-
-    if (!userId || !spAmount)
-      return res.status(400).json({ error: "Missing parameters" });
+    const admin = require("./admin.js").default; // make sure this points to your admin.js
+    const db = admin.database();
 
     const userRef = db.ref(`users/${userId}/points`);
     const snapshot = await userRef.get();
     const currentSP = snapshot.exists() ? snapshot.val() : 0;
     const newSP = currentSP + Number(spAmount);
-
     await userRef.set(newSP);
 
-    return res.status(200).json({
-      success: true,
-      userId,
-      newSP
-    });
+    return res.status(200).json({ success: true, newSP, userId });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
