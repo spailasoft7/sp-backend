@@ -1,3 +1,4 @@
+// api/paystack.js
 import { db } from "../firebase/admin.js";
 
 export default async function handler(req, res) {
@@ -11,36 +12,34 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // ===== Your Paystack logic =====
   if (req.method === "POST") {
     try {
       const { userId, spAmount } = req.body;
-      // Call Paystack or your logic here
 
-      res.status(200).json({ status: "success", spAdded: spAmount });
+      if (!userId || !spAmount) {
+        return res.status(400).json({ error: "Missing userId or spAmount" });
+      }
+
+      // ===== Firebase logic =====
+      const userRef = db.ref(`users/${userId}/points`);
+      const snapshot = await userRef.get();
+      const currentSP = snapshot.exists() ? snapshot.val() : 0;
+
+      const newSP = currentSP + Number(spAmount);
+      await userRef.set(newSP);
+
+      // ===== Response =====
+      return res.status(200).json({
+        success: true,
+        userId,
+        newSP,
+      });
+
     } catch (err) {
-      res.status(500).json({ status: "error", message: err.message });
+      console.error(err);
+      return res.status(500).json({ success: false, error: err.message });
     }
   } else {
-    res.status(405).json({ status: "error", message: "Method not allowed" });
-  }
-}
-    const userRef = db.ref(`users/${userId}/points`);
-
-    const snapshot = await userRef.get();
-    const currentSP = snapshot.exists() ? snapshot.val() : 0;
-
-    const newSP = currentSP + Number(spAmount);
-
-    await userRef.set(newSP);
-
-    return res.json({
-      success: true,
-      userId,
-      newSP,
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
+    return res.status(405).json({ success: false, message: "Method not allowed" });
   }
 }
