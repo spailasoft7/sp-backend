@@ -1,12 +1,31 @@
+import { db } from "../firebase/admin.js";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "POST only" });
   }
 
-  const event = req.body;
+  try {
+    const { userId, spAmount } = req.body;
 
-  // Just test for now
-  console.log("Paystack event:", event);
+    if (!userId || !spAmount) {
+      return res.status(400).json({ error: "Missing data" });
+    }
 
-  return res.status(200).json({ received: true });
+    const userRef = db.ref(`users/${userId}/SP`);
+
+    const snapshot = await userRef.get();
+    const currentSP = snapshot.exists() ? snapshot.val() : 0;
+
+    const newSP = currentSP + Number(spAmount);
+
+    await userRef.set(newSP);
+
+    return res.json({
+      success: true,
+      newSP,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 }
